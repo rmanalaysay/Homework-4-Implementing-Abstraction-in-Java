@@ -54,107 +54,88 @@ class Repair extends Item {
     }
 }
 
+// GUI Component for Item Input and Calculation
+class ItemPanel extends JPanel {
+    private JTextField priceField;
+    private JTextField quantityField;
+    private JLabel resultLabel;
+
+    public ItemPanel(String itemName, String priceLabel, String quantityLabel, String resultText) {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
+        JLabel itemLabel = new JLabel(itemName);
+        JLabel pricePrompt = new JLabel(priceLabel);
+        JLabel quantityPrompt = new JLabel(quantityLabel);
+
+        priceField = new JTextField();
+        quantityField = new JTextField();
+        resultLabel = new JLabel(resultText);
+
+        Dimension fieldSize = new Dimension(120, 20);
+        priceField.setPreferredSize(fieldSize);
+        quantityField.setPreferredSize(fieldSize);
+
+        add(itemLabel);
+        add(pricePrompt);
+        add(priceField);
+        add(quantityPrompt);
+        add(quantityField);
+        add(Box.createVerticalStrut(15));
+        add(new JLabel("Total:"));
+        add(resultLabel);
+    }
+
+    public double getPrice() throws NumberFormatException {
+        return Double.parseDouble(priceField.getText());
+    }
+
+    public int getQuantity() throws NumberFormatException {
+        return Integer.parseInt(quantityField.getText());
+    }
+
+    public void setResult(double result) {
+        resultLabel.setText(String.format("₱%.2f", result));
+    }
+}
+
 public class SalesCalculator {
     public static void main(String[] args) {
         JFrame frame = new JFrame("Sales Calculator");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(350, 250);
+        frame.setSize(400, 300);
 
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BorderLayout(10, 10)); // Margins
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15)); // Padding around the panel
+        JPanel mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        JPanel leftPanel = new JPanel();
-        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS)); // Vertical alignment
+        // Item panels
+        ItemPanel phonePanel = new ItemPanel("PHONE", "Price per Unit:", "Quantity Sold:", "-");
+        ItemPanel repairPanel = new ItemPanel("REPAIR", "Price per Hour:", "Hours Worked:", "-");
 
-        JPanel rightPanel = new JPanel();
-        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS)); // Vertical alignment
-
-        // Adjust size of text fields
-        Dimension textFieldSize = new Dimension(150, 30);
-
-        // Phone details input
-        JLabel phoneLabel = new JLabel("Phone Price:");
-        JTextField phonePriceField = new JTextField();
-        phonePriceField.setPreferredSize(textFieldSize);
-        phonePriceField.setMaximumSize(textFieldSize);
-
-        JLabel phoneQuantityLabel = new JLabel("Quantity Sold:");
-        JTextField phoneQuantityField = new JTextField();
-        phoneQuantityField.setPreferredSize(textFieldSize);
-        phoneQuantityField.setMaximumSize(textFieldSize);
-
-        // Phone total sales result
-        JLabel phoneTotalLabel = new JLabel("Phone Total Sales:");
-        JLabel phoneTotalResult = new JLabel("-");
-
-        // Add components to the left panel
-        leftPanel.add(phoneLabel);
-        leftPanel.add(phonePriceField);
-        leftPanel.add(phoneQuantityLabel);
-        leftPanel.add(phoneQuantityField);
-        leftPanel.add(Box.createVerticalStrut(15)); // Break
-        leftPanel.add(phoneTotalLabel);
-        leftPanel.add(phoneTotalResult);
-
-        // Repair details input
-        JLabel repairLabel = new JLabel("Repair Price per Hour:");
-        JTextField repairPriceField = new JTextField();
-        repairPriceField.setPreferredSize(textFieldSize);
-        repairPriceField.setMaximumSize(textFieldSize);
-
-        JLabel repairHoursLabel = new JLabel("Number of Hours:");
-        JTextField repairHoursField = new JTextField();
-        repairHoursField.setPreferredSize(textFieldSize);
-        repairHoursField.setMaximumSize(textFieldSize);
-
-        // Repair total sales result
-        JLabel repairTotalLabel = new JLabel("Repair Total Sales:");
-        JLabel repairTotalResult = new JLabel("-");
-
-        // Add components to the right panel
-        rightPanel.add(repairLabel);
-        rightPanel.add(repairPriceField);
-        rightPanel.add(repairHoursLabel);
-        rightPanel.add(repairHoursField);
-        rightPanel.add(Box.createVerticalStrut(15)); // Break
-        rightPanel.add(repairTotalLabel);
-        rightPanel.add(repairTotalResult);
-
-        // Calculate button
+        // Button to calculate totals
         JButton calculateButton = new JButton("Calculate");
         calculateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    // Read inputs for Phone
-                    double phonePrice = Double.parseDouble(phonePriceField.getText());
-                    int phoneQuantity = Integer.parseInt(phoneQuantityField.getText());
+                    // Phone calculation
+                    Phone phone = new Phone("Phone", phonePanel.getPrice(), phonePanel.getQuantity());
+                    phonePanel.setResult(phone.calculateTotal());
 
-                    // Read inputs for Repair
-                    double repairPricePerHour = Double.parseDouble(repairPriceField.getText());
-                    int repairHours = Integer.parseInt(repairHoursField.getText());
-
-                    // Create objects
-                    Phone phone = new Phone("Phone", phonePrice, phoneQuantity);
-                    Repair repair = new Repair("Repair", repairPricePerHour, repairHours);
-
-                    // Calculate totals
-                    phoneTotalResult.setText(String.format("₱%.2f", phone.calculateTotal()));
-                    repairTotalResult.setText(String.format("₱%.2f", repair.calculateTotal()));
+                    // Repair calculation
+                    Repair repair = new Repair("Repair", repairPanel.getPrice(), repairPanel.getQuantity());
+                    repairPanel.setResult(repair.calculateTotal());
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(frame, "Please enter valid numbers.", "Input Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
 
-        // Add panels to main panel
+        // Organize panels
         JPanel centerPanel = new JPanel(new GridLayout(1, 2, 10, 0));
-        centerPanel.add(leftPanel);
-        centerPanel.add(rightPanel);
+        centerPanel.add(phonePanel);
+        centerPanel.add(repairPanel);
 
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
         buttonPanel.add(calculateButton);
 
         mainPanel.add(centerPanel, BorderLayout.CENTER);
